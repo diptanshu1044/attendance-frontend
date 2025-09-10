@@ -92,7 +92,7 @@ export const courseService = {
   },
 
   getCourse: async (id: string): Promise<Course> => {
-    const response = await api.get(API_ENDPOINTS.COURSES.UPDATE(id));
+    const response = await api.get(API_ENDPOINTS.COURSES.GET(id));
     return response.data.data || response.data;
   },
 

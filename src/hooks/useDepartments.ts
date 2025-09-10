@@ -25,6 +25,7 @@ export const useDepartments = () => {
   const deleteDepartmentMutation = useDeleteDepartment();
 
   return {
+    data: query.data || [],
     departments: query.data || [],
     isLoading: query.isLoading,
     error: query.error,

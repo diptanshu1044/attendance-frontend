@@ -2,37 +2,31 @@ export interface Course {
   id: string;
   name: string;
   code: string;
-  description?: string;
   credits: number;
+  semester: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   department: {
     id: string;
     name: string;
     code: string;
   };
-  faculty: {
+  faculty?: {
     id: string;
     firstName: string;
     lastName: string;
     email: string;
   }[];
-  semester: number;
-  academicYear: string;
-  enrollmentCount: number;
-  maxEnrollment?: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  enrollmentCount?: number;
 }
 
 export interface CreateCourseData {
   name: string;
   code: string;
-  description?: string;
   credits: number;
   departmentId: string;
   semester: number;
-  academicYear: string;
-  maxEnrollment?: number;
 }
 
 export interface EnrollmentData {

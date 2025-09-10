@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Users, BookOpen, Calendar } from 'lucide-react';
 import { useCourses, useDeleteCourse } from '../../hooks/useCourses';
-import { useDepartments } from '../../hooks/useDepartments';
 import Card, { CardHeader } from '../ui/Card';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
@@ -96,19 +95,13 @@ const CourseList: React.FC<CourseListProps> = ({ onCreateCourse, onEditCourse })
                   </div>
                   <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                     <Users size={16} className="mr-2" />
-                    <span>{course.enrollmentCount} enrolled</span>
+                    <span>{course.enrollmentCount || 0} enrolled</span>
                   </div>
                   <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                     <Calendar size={16} className="mr-2" />
                     <span>Semester {course.semester}</span>
                   </div>
                 </div>
-
-                {course.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                    {course.description}
-                  </p>
-                )}
 
                 <div className="flex space-x-2">
                   <Button

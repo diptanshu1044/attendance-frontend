@@ -18,43 +18,47 @@ const CourseForm: React.FC<CourseFormProps> = ({ isOpen, onClose, course, mode }
   const [formData, setFormData] = useState<CreateCourseData>({
     name: '',
     code: '',
-    description: '',
     credits: 3,
     departmentId: '',
     semester: 1,
-    academicYear: new Date().getFullYear().toString(),
-    maxEnrollment: 50,
   });
 
-  const { data: departments } = useDepartments();
+  const { data: departments, isLoading: departmentsLoading } = useDepartments();
   const createCourseMutation = useCreateCourse();
   const updateCourseMutation = useUpdateCourse();
 
+  // Reset form when modal opens/closes
   useEffect(() => {
-    if (course && mode === 'edit') {
-      setFormData({
-        name: course.name,
-        code: course.code,
-        description: course.description || '',
-        credits: course.credits,
-        departmentId: course.department.id,
-        semester: course.semester,
-        academicYear: course.academicYear,
-        maxEnrollment: course.maxEnrollment || 50,
-      });
-    } else {
-      setFormData({
-        name: '',
-        code: '',
-        description: '',
-        credits: 3,
-        departmentId: '',
-        semester: 1,
-        academicYear: new Date().getFullYear().toString(),
-        maxEnrollment: 50,
-      });
+    if (isOpen) {
+      if (course && mode === 'edit') {
+        setFormData({
+          name: course.name,
+          code: course.code,
+          credits: course.credits,
+          departmentId: course.department.id,
+          semester: course.semester,
+        });
+      } else if (mode === 'create') {
+        setFormData({
+          name: '',
+          code: '',
+          credits: 3,
+          departmentId: '',
+          semester: 1,
+        });
+      }
     }
-  }, [course, mode, isOpen]);
+  }, [isOpen, course, mode]);
+
+  // Update form data when departments load (for edit mode)
+  useEffect(() => {
+    if (course && mode === 'edit' && departments && departments.length > 0 && isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        departmentId: course.department.id,
+      }));
+    }
+  }, [departments, course, mode, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +82,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ isOpen, onClose, course, mode }
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'credits' || name === 'semester' || name === 'maxEnrollment' 
+      [name]: name === 'credits' || name === 'semester' 
         ? parseInt(value) || 0 
         : value
     }));
@@ -102,6 +106,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ isOpen, onClose, course, mode }
             Close
           </Button>
         </div>
+
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -132,21 +137,8 @@ const CourseForm: React.FC<CourseFormProps> = ({ isOpen, onClose, course, mode }
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Enter course description"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              rows={3}
-            />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Credits *
@@ -178,55 +170,27 @@ const CourseForm: React.FC<CourseFormProps> = ({ isOpen, onClose, course, mode }
                 ))}
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Academic Year *
-              </label>
-              <Input
-                name="academicYear"
-                value={formData.academicYear}
-                onChange={handleChange}
-                placeholder="2024"
-                required
-              />
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Department *
-              </label>
-              <select
-                name="departmentId"
-                value={formData.departmentId}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                required
-              >
-                <option value="">Select Department</option>
-                {departments?.map(dept => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name} ({dept.code})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Max Enrollment
-              </label>
-              <Input
-                name="maxEnrollment"
-                type="number"
-                value={formData.maxEnrollment}
-                onChange={handleChange}
-                min="1"
-                max="200"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Department *
+            </label>
+            <select
+              name="departmentId"
+              value={formData.departmentId}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              required
+              key={`department-${formData.departmentId}-${departments?.length || 0}`}
+            >
+              <option value="">Select Department</option>
+              {departments?.map(dept => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name} ({dept.code})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
