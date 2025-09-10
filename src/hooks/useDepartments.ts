@@ -29,7 +29,8 @@ export const useDepartments = () => {
     isLoading: query.isLoading,
     error: query.error,
     createDepartment: createDepartmentMutation.mutateAsync,
-    updateDepartment: updateDepartmentMutation.mutateAsync,
+    updateDepartment: (id: string, data: Partial<Department>) => 
+      updateDepartmentMutation.mutateAsync({ id, data }),
     deleteDepartment: deleteDepartmentMutation.mutateAsync,
     isCreating: createDepartmentMutation.isPending,
     isUpdating: updateDepartmentMutation.isPending,

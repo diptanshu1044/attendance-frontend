@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
   DEPARTMENTS: {
     LIST: '/departments',
     CREATE: '/departments',
+    GET: (id: string) => `/departments/${id}`,
     UPDATE: (id: string) => `/departments/${id}`,
     DELETE: (id: string) => `/departments/${id}`,
     ANALYTICS: (id: string) => `/analytics/department/${id}`,

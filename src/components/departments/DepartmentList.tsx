@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit, Trash2, Building2, Calendar, Users } from 'lucide-react';
+import { Edit, Trash2, Building2, Calendar, BookOpen, Eye } from 'lucide-react';
 import { useDepartments } from '../../hooks/useDepartments';
 import { Department } from '../../types/auth';
 import toast from 'react-hot-toast';
@@ -7,18 +7,32 @@ import toast from 'react-hot-toast';
 interface DepartmentListProps {
   searchTerm: string;
   onEditDepartment: (department: Department) => void;
+  onViewDepartment?: (department: Department) => void;
 }
 
-const DepartmentList: React.FC<DepartmentListProps> = ({ searchTerm, onEditDepartment }) => {
+const DepartmentList: React.FC<DepartmentListProps> = ({ searchTerm, onEditDepartment, onViewDepartment }) => {
   const { departments, deleteDepartment, isLoading } = useDepartments();
+
+  // Debug: Log departments to see their structure
+  console.log('DepartmentList - departments:', departments);
+  console.log('DepartmentList - first department:', departments[0]);
+  console.log('DepartmentList - departments length:', departments.length);
+  
+  // Additional debugging for each department
+  departments.forEach((dept, index) => {
+    console.log(`Department ${index}:`, dept);
+    console.log(`Department ${index} id:`, dept.id);
+    console.log(`Department ${index} has id:`, 'id' in dept);
+  });
 
   const handleDeleteDepartment = async (departmentId: string, departmentName: string) => {
     if (window.confirm(`Are you sure you want to delete ${departmentName}?`)) {
       try {
         await deleteDepartment(departmentId);
         toast.success('Department deleted successfully');
-      } catch (error: any) {
-        toast.error(error.message || 'Failed to delete department');
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to delete department';
+        toast.error(errorMessage);
       }
     }
   };
@@ -26,8 +40,7 @@ const DepartmentList: React.FC<DepartmentListProps> = ({ searchTerm, onEditDepar
   // Filter departments based on search term
   const filteredDepartments = departments.filter(department =>
     department.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    department.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (department.description && department.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    department.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -72,32 +85,50 @@ const DepartmentList: React.FC<DepartmentListProps> = ({ searchTerm, onEditDepar
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {department.code}
                       </p>
+                      {/* Temporary debug display */}
+                      <p className="text-xs text-red-500">
+                        ID: {department.id || 'NO ID FOUND'}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Description */}
-                  {department.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
-                      {department.description}
-                    </p>
-                  )}
 
                   {/* Department Stats */}
                   <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center">
+                      <BookOpen className="h-4 w-4 mr-1" />
+                      <span>
+                        {department.courses?.length || 0} course{department.courses?.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1" />
                       <span>
                         Created {new Date(department.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    {/* You can add more stats here like number of courses, faculty, etc. */}
                   </div>
                 </div>
 
                 {/* Actions */}
                 <div className="flex items-center space-x-1 ml-4">
+                  {onViewDepartment && (
+                    <button
+                      onClick={() => onViewDepartment(department)}
+                      className="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                      title="View department details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  )}
                   <button
-                    onClick={() => onEditDepartment(department)}
+                    onClick={() => {
+                      console.log('Edit button clicked, department:', department);
+                      console.log('Department ID:', department.id);
+                      console.log('Department keys:', Object.keys(department));
+                      console.log('Department values:', Object.values(department));
+                      onEditDepartment(department);
+                    }}
                     className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
                     title="Edit department"
                   >

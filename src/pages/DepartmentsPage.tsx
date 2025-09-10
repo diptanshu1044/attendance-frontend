@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Plus, Building2, Edit, Trash2, Search, Filter } from 'lucide-react';
 import DepartmentForm from '../components/departments/DepartmentForm';
 import DepartmentList from '../components/departments/DepartmentList';
+import DepartmentDetails from '../components/departments/DepartmentDetails';
 import { Department } from '../types/auth';
 
 const DepartmentsPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+  const [viewingDepartment, setViewingDepartment] = useState<Department | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleAddDepartment = () => {
@@ -15,6 +17,10 @@ const DepartmentsPage: React.FC = () => {
   };
 
   const handleEditDepartment = (department: Department) => {
+    console.log('DepartmentsPage - handleEditDepartment called with:', department);
+    console.log('Department ID:', department.id);
+    console.log('Department type:', typeof department);
+    console.log('Department keys:', Object.keys(department));
     setEditingDepartment(department);
     setShowForm(true);
   };
@@ -22,6 +28,14 @@ const DepartmentsPage: React.FC = () => {
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingDepartment(null);
+  };
+
+  const handleViewDepartment = (department: Department) => {
+    setViewingDepartment(department);
+  };
+
+  const handleCloseDetails = () => {
+    setViewingDepartment(null);
   };
 
   return (
@@ -61,6 +75,7 @@ const DepartmentsPage: React.FC = () => {
       <DepartmentList
         searchTerm={searchTerm}
         onEditDepartment={handleEditDepartment}
+        onViewDepartment={handleViewDepartment}
       />
 
       {/* Department Form Modal */}
@@ -69,6 +84,14 @@ const DepartmentsPage: React.FC = () => {
           department={editingDepartment}
           onClose={handleCloseForm}
           onSuccess={handleCloseForm}
+        />
+      )}
+
+      {/* Department Details Modal */}
+      {viewingDepartment && (
+        <DepartmentDetails
+          department={viewingDepartment}
+          onClose={handleCloseDetails}
         />
       )}
     </div>

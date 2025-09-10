@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Building2, Hash, FileText } from 'lucide-react';
+import { X, Building2, Hash, AlertCircle } from 'lucide-react';
 import { useDepartments } from '../../hooks/useDepartments';
 import { Department } from '../../types/auth';
 import toast from 'react-hot-toast';
@@ -10,24 +10,60 @@ interface DepartmentFormProps {
   onSuccess: () => void;
 }
 
+interface FormErrors {
+  name?: string;
+  code?: string;
+  general?: string;
+}
+
 const DepartmentForm: React.FC<DepartmentFormProps> = ({ department, onClose, onSuccess }) => {
   const { createDepartment, updateDepartment } = useDepartments();
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    description: '',
   });
 
   useEffect(() => {
+    console.log('DepartmentForm - department prop:', department);
     if (department) {
+      console.log('DepartmentForm - department.id:', department.id);
+      console.log('DepartmentForm - department object keys:', Object.keys(department));
       setFormData({
         name: department.name,
         code: department.code,
-        description: department.description || '',
+      });
+    } else {
+      setFormData({
+        name: '',
+        code: '',
       });
     }
+    // Clear errors when department changes
+    setErrors({});
   }, [department]);
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Department name is required';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Department name must be at least 2 characters';
+    }
+
+    if (!formData.code.trim()) {
+      newErrors.code = 'Department code is required';
+    } else if (formData.code.trim().length < 2) {
+      newErrors.code = 'Department code must be at least 2 characters';
+    } else if (!/^[A-Z0-9]+$/.test(formData.code.trim())) {
+      newErrors.code = 'Department code must contain only uppercase letters and numbers';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -35,25 +71,70 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ department, onClose, on
       ...prev,
       [name]: value
     }));
+    
+    // Clear specific field error when user starts typing
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
+    setErrors({});
 
     try {
+      const trimmedData = {
+        name: formData.name.trim(),
+        code: formData.code.trim().toUpperCase(),
+      };
+
       if (department) {
         // Update existing department
-        await updateDepartment(department.id, formData);
+        console.log('Updating department - department object:', department);
+        console.log('Updating department - department.id:', department.id);
+        console.log('Updating department - trimmedData:', trimmedData);
+        if (!department.id) {
+          console.error('Department ID is missing! Department object:', department);
+          throw new Error('Department ID is missing');
+        }
+        console.log('Calling updateDepartment with id:', department.id, 'and data:', trimmedData);
+        await updateDepartment(department.id, trimmedData);
         toast.success('Department updated successfully');
       } else {
         // Create new department
-        await createDepartment(formData);
+        console.log('Creating department:', trimmedData);
+        await createDepartment(trimmedData);
         toast.success('Department created successfully');
       }
       onSuccess();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save department');
+      console.error('Department save error:', error);
+      
+      // Handle validation errors from backend
+      if (error.response?.data?.errors) {
+        const backendErrors: FormErrors = {};
+        error.response.data.errors.forEach((err: any) => {
+          if (err.path === 'name') backendErrors.name = err.msg;
+          if (err.path === 'code') backendErrors.code = err.msg;
+        });
+        setErrors(backendErrors);
+      } else if (error.response?.data?.message) {
+        setErrors({ general: error.response.data.message });
+        toast.error(error.response.data.message);
+      } else {
+        setErrors({ general: 'Failed to save department' });
+        toast.error(error.message || 'Failed to save department');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +157,16 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ department, onClose, on
             </button>
           </div>
 
+          {/* General Error Message */}
+          {errors.general && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <div className="flex">
+                <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
+                <p className="text-sm text-red-800 dark:text-red-200">{errors.general}</p>
+              </div>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
@@ -92,10 +183,20 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ department, onClose, on
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                      errors.name 
+                        ? 'border-red-300 dark:border-red-600' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="Enter department name"
                   />
                 </div>
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {errors.name}
+                  </p>
+                )}
               </div>
 
               {/* Department Code */}
@@ -111,29 +212,26 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({ department, onClose, on
                     value={formData.code}
                     onChange={handleInputChange}
                     required
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                      errors.code 
+                        ? 'border-red-300 dark:border-red-600' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="Enter department code (e.g., CS, EE, ME)"
+                    style={{ textTransform: 'uppercase' }}
                   />
                 </div>
+                {errors.code && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    {errors.code}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Use uppercase letters and numbers only (e.g., CS, EE, ME, IT)
+                </p>
               </div>
 
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Description
-                </label>
-                <div className="relative">
-                  <FileText className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Enter department description"
-                  />
-                </div>
-              </div>
             </div>
 
             {/* Form Actions */}

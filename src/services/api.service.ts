@@ -49,11 +49,15 @@ export const authService = {
 export const departmentService = {
   getDepartments: async (): Promise<Department[]> => {
     const response = await api.get(API_ENDPOINTS.DEPARTMENTS.LIST);
-    return response.data.data || response.data;
+    console.log('API Response for getDepartments:', response.data);
+    const departments = response.data.data || response.data;
+    console.log('Processed departments:', departments);
+    console.log('First department structure:', departments[0]);
+    return departments;
   },
 
   getDepartment: async (id: string): Promise<Department> => {
-    const response = await api.get(API_ENDPOINTS.DEPARTMENTS.UPDATE(id));
+    const response = await api.get(API_ENDPOINTS.DEPARTMENTS.GET(id));
     return response.data.data || response.data;
   },
 
@@ -63,7 +67,10 @@ export const departmentService = {
   },
 
   updateDepartment: async (id: string, departmentData: Partial<Department>): Promise<Department> => {
+    console.log('updateDepartment called with id:', id, 'and data:', departmentData);
+    console.log('API endpoint:', API_ENDPOINTS.DEPARTMENTS.UPDATE(id));
     const response = await api.put(API_ENDPOINTS.DEPARTMENTS.UPDATE(id), departmentData);
+    console.log('Update response:', response.data);
     return response.data.data || response.data;
   },
 

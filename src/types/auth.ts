@@ -17,10 +17,23 @@ export interface Department {
   id: string;
   name: string;
   code: string;
-  description?: string;
-  headOfDepartment?: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  courses?: Course[];
+}
+
+export interface Course {
+  id: string;
+  name: string;
+  code: string;
+  credits: number;
+  semester: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  departmentId: string;
+  department?: Department;
 }
 
 export interface AuthState {
