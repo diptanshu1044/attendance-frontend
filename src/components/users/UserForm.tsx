@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Lock, GraduationCap, UserCheck, Building2 } from 'lucide-react';
-import { useDepartments } from '../../hooks/useDepartments';
+import { X, User, Mail, Lock, GraduationCap, UserCheck } from 'lucide-react';
 import { useUsers } from '../../hooks/useUsers';
 import { User as UserType, RegisterData } from '../../types/auth';
 import toast from 'react-hot-toast';
@@ -13,7 +12,6 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) => {
   const { createUser, updateUser } = useUsers();
-  const { departments } = useDepartments();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<RegisterData>({
     email: '',
@@ -21,8 +19,6 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) => {
     firstName: '',
     lastName: '',
     role: 'STUDENT',
-    departmentId: '',
-    phoneNumber: '',
     studentId: '',
     employeeId: '',
   });
@@ -35,8 +31,6 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        departmentId: user.department?.id || '',
-        phoneNumber: user.phoneNumber || '',
         studentId: user.studentId || '',
         employeeId: user.employeeId || '',
       });
@@ -57,8 +51,14 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) => {
 
     try {
       if (user) {
-        // Update existing user
-        await updateUser(user.id, formData);
+        // Update existing user - exclude password if empty
+        const updateData = { ...formData };
+        if (!updateData.password) {
+          const { password, ...updateDataWithoutPassword } = updateData;
+          await updateUser(user.id, updateDataWithoutPassword);
+        } else {
+          await updateUser(user.id, updateData);
+        }
         toast.success('User updated successfully');
       } else {
         // Create new user
@@ -200,43 +200,6 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) => {
                 </div>
               </div>
 
-              {/* Department */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Department
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <select
-                    name="departmentId"
-                    value={formData.departmentId}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white appearance-none"
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map((dept: any) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Phone Number */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="Enter phone number"
-                />
-              </div>
 
               {/* Student ID */}
               {isStudent && (

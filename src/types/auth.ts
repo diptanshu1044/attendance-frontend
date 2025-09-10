@@ -4,9 +4,6 @@ export interface User {
   firstName: string;
   lastName: string;
   role: 'ADMIN' | 'FACULTY' | 'STUDENT';
-  profilePicture?: string;
-  department?: Department;
-  phoneNumber?: string;
   studentId?: string;
   employeeId?: string;
   createdAt: string;
@@ -54,8 +51,6 @@ export interface RegisterData {
   firstName: string;
   lastName: string;
   role: 'ADMIN' | 'FACULTY' | 'STUDENT';
-  departmentId?: string;
-  phoneNumber?: string;
   studentId?: string;
   employeeId?: string;
 }

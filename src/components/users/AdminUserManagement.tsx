@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
-import { Edit, Trash2, Search, Filter, MoreVertical, User, GraduationCap, UserCheck, Shield } from 'lucide-react';
+import { 
+  Shield, 
+  Edit, 
+  Trash2, 
+  Search, 
+  Filter, 
+  User, 
+  GraduationCap, 
+  UserCheck,
+  AlertTriangle,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
 import { useUsers } from '../../hooks/useUsers';
 import { User as UserType } from '../../types/auth';
 import toast from 'react-hot-toast';
 
-interface UserListProps {
-  activeTab: 'all' | 'students' | 'faculty' | 'admin';
+interface AdminUserManagementProps {
   onEditUser: (user: UserType) => void;
 }
 
-const UserList: React.FC<UserListProps> = ({ activeTab, onEditUser }) => {
+const AdminUserManagement: React.FC<AdminUserManagementProps> = ({ onEditUser }) => {
   const { users, deleteUser, isLoading } = useUsers();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'role' | 'createdAt'>('name');
@@ -46,22 +57,14 @@ const UserList: React.FC<UserListProps> = ({ activeTab, onEditUser }) => {
       case 'FACULTY':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       case 'ADMIN':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
   };
 
-  // Filter users based on active tab
-  const filteredUsers = users.filter(user => {
-    if (activeTab === 'students') return user.role === 'STUDENT';
-    if (activeTab === 'faculty') return user.role === 'FACULTY';
-    if (activeTab === 'admin') return user.role === 'ADMIN';
-    return true;
-  });
-
   // Apply search filter
-  const searchedUsers = filteredUsers.filter(user =>
+  const searchedUsers = users.filter(user =>
     user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,7 +122,7 @@ const UserList: React.FC<UserListProps> = ({ activeTab, onEditUser }) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder="Search users..."
+            placeholder="Search all users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -154,7 +157,7 @@ const UserList: React.FC<UserListProps> = ({ activeTab, onEditUser }) => {
             <User className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No users found</h3>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding a new user.'}
+              {searchTerm ? 'Try adjusting your search terms.' : 'No users available.'}
             </p>
           </div>
         ) : (
@@ -182,6 +185,12 @@ const UserList: React.FC<UserListProps> = ({ activeTab, onEditUser }) => {
                           {getRoleIcon(user.role)}
                           <span className="ml-1">{user.role}</span>
                         </span>
+                        {user.role === 'ADMIN' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                            <Shield className="w-3 h-3 mr-1" />
+                            ADMIN
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                         {user.email}
@@ -222,7 +231,7 @@ const UserList: React.FC<UserListProps> = ({ activeTab, onEditUser }) => {
       {sortedUsers.length > 0 && (
         <div className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
           <p>
-            Showing {sortedUsers.length} of {filteredUsers.length} users
+            Showing {sortedUsers.length} of {users.length} users
           </p>
         </div>
       )}
@@ -230,4 +239,4 @@ const UserList: React.FC<UserListProps> = ({ activeTab, onEditUser }) => {
   );
 };
 
-export default UserList;
+export default AdminUserManagement;

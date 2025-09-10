@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Plus, Users, GraduationCap, UserCheck } from 'lucide-react';
+import { Plus, Users, GraduationCap, UserCheck, Shield } from 'lucide-react';
 import UserForm from '../components/users/UserForm';
 import UserList from '../components/users/UserList';
+import AdminPanel from '../components/users/AdminPanel';
 import { User } from '../types/auth';
 
 const UsersPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'students' | 'faculty'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'students' | 'faculty' | 'admin'>('all');
 
   const handleAddUser = () => {
     setEditingUser(null);
@@ -28,6 +29,7 @@ const UsersPage: React.FC = () => {
     { id: 'all', label: 'All Users', icon: Users, count: 0 },
     { id: 'students', label: 'Students', icon: GraduationCap, count: 0 },
     { id: 'faculty', label: 'Faculty', icon: UserCheck, count: 0 },
+    { id: 'admin', label: 'Admins', icon: Shield, count: 0 },
   ];
 
   return (
@@ -79,11 +81,15 @@ const UsersPage: React.FC = () => {
         </nav>
       </div>
 
-      {/* User List */}
-      <UserList
-        activeTab={activeTab}
-        onEditUser={handleEditUser}
-      />
+      {/* Content based on active tab */}
+      {activeTab === 'admin' ? (
+        <AdminPanel onEditUser={handleEditUser} />
+      ) : (
+        <UserList
+          activeTab={activeTab}
+          onEditUser={handleEditUser}
+        />
+      )}
 
       {/* User Form Modal */}
       {showForm && (
