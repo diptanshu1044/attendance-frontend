@@ -3,36 +3,20 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, CameraOff, AlertCircle, CheckCircle } from 'lucide-react';
 import Card, { CardHeader } from '../ui/Card';
 import Button from '../ui/Button';
-import Badge from '../ui/Badge';
-import { useApiMutation } from '../../hooks/useApi';
-import { API_ENDPOINTS } from '../../constants/api';
+import { useMarkAttendanceQR } from '../../hooks/useAttendance';
 
 interface QRScannerProps {
-  onScanSuccess: (sessionId: string) => void;
+  onScanSuccess?: (sessionId: string) => void;
 }
 
-const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess }) => {
+const QRScanner: React.FC<QRScannerProps> = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [lastScanResult, setLastScanResult] = useState<string | null>(null);
   const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
 
-  const markAttendanceMutation = useApiMutation(
-    'POST',
-    API_ENDPOINTS.ATTENDANCE.MARK_QR,
-    {
-      successMessage: 'Attendance marked successfully!',
-      onSuccess: () => {
-        setSuccess('Attendance marked successfully!');
-        setTimeout(() => setSuccess(null), 3000);
-      },
-      onError: () => {
-        setError('Failed to mark attendance');
-        setTimeout(() => setError(null), 3000);
-      },
-    }
-  );
+  const markAttendanceMutation = useMarkAttendanceQR();
 
   useEffect(() => {
     return () => {
@@ -61,7 +45,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess }) => {
         (decodedText) => {
           handleScanSuccess(decodedText);
         },
-        (errorMessage) => {
+        () => {
           // Handle scan failure silently - this fires constantly while scanning
         }
       );
@@ -96,9 +80,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess }) => {
     setLastScanResult(decodedText);
 
     try {
-      // Extract session ID from QR code data
-      const qrData = JSON.parse(decodedText);
-      const { sessionId, location } = qrData;
+      // Extract QR code ID from the scanned data
+      const qrCodeId = decodedText;
 
       // Get user's current location
       if (navigator.geolocation) {
@@ -109,17 +92,23 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess }) => {
               longitude: position.coords.longitude,
             };
 
-            // Mark attendance
-            await markAttendanceMutation.mutateAsync({
-              sessionId,
-              location: userLocation,
-              qrData: decodedText,
-            });
+            try {
+              // Mark attendance
+              await markAttendanceMutation.mutateAsync({
+                qrCodeId,
+                location: userLocation,
+              });
 
-            onScanSuccess(sessionId);
-            
-            // Stop scanning after successful scan
-            stopScanning();
+              setSuccess('Attendance marked successfully!');
+              setTimeout(() => setSuccess(null), 3000);
+              
+              // Stop scanning after successful scan
+              stopScanning();
+            } catch (error: unknown) {
+              const errorMessage = error instanceof Error ? error.message : 'Failed to mark attendance';
+              setError(errorMessage);
+              setTimeout(() => setError(null), 3000);
+            }
           },
           (geoError) => {
             console.error('Geolocation error:', geoError);
@@ -132,7 +121,22 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess }) => {
           }
         );
       } else {
-        setError('Geolocation not supported by this browser');
+        // Try without location
+        try {
+          await markAttendanceMutation.mutateAsync({
+            qrCodeId,
+          });
+
+          setSuccess('Attendance marked successfully!');
+          setTimeout(() => setSuccess(null), 3000);
+          
+          // Stop scanning after successful scan
+          stopScanning();
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to mark attendance';
+          setError(errorMessage);
+          setTimeout(() => setError(null), 3000);
+        }
       }
     } catch (err) {
       console.error('QR parsing error:', err);

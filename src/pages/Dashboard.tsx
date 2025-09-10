@@ -10,48 +10,40 @@ import {
   Clock
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { useApiQuery } from '../hooks/useApi';
+import { useDashboardStats } from '../hooks/useDashboard';
 import StatCard from '../components/dashboard/StatCard';
 import AttendanceChart from '../components/dashboard/AttendanceChart';
 import Card, { CardHeader } from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { API_ENDPOINTS } from '../constants/api';
-
-interface DashboardStats {
-  totalStudents: number;
-  totalFaculty: number;
-  totalCourses: number;
-  totalSessions: number;
-  todaySessions: number;
-  averageAttendance: number;
-  attendanceTrend: Array<{
-    date: string;
-    attendance: number;
-    sessions: number;
-  }>;
-  recentSessions: Array<{
-    id: string;
-    title: string;
-    course: string;
-    time: string;
-    status: 'ACTIVE' | 'COMPLETED' | 'SCHEDULED';
-    attendanceRate: number;
-  }>;
-}
 
 const Dashboard: React.FC = () => {
   const { user, isAdmin, isFaculty, isStudent } = useAuth();
 
-  const { data: stats, isLoading } = useApiQuery<DashboardStats>(
-    ['dashboard', user?.role],
-    '/dashboard/stats'
-  );
+  const { data: stats, isLoading, error } = useDashboardStats(user?.role || 'STUDENT');
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">
+            Failed to load dashboard data
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
