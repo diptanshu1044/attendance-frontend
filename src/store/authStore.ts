@@ -23,7 +23,10 @@ export const useAuthStore = create<AuthState>()(
             password,
           });
 
-          const { user, token } = response.data;
+          const { user, token } = response.data.data || response.data;
+          
+          console.log('Login successful - Token received:', token ? 'Yes' : 'No');
+          console.log('Login successful - User:', user);
           
           set({
             user,
@@ -31,6 +34,8 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
+          
+          console.log('Auth store updated - Token stored:', token ? 'Yes' : 'No');
           
           handleApiSuccess('Login successful!');
         } catch (error) {
@@ -52,7 +57,7 @@ export const useAuthStore = create<AuthState>()(
           
           const response = await api.post<LoginResponse>(API_ENDPOINTS.AUTH.REGISTER, userData);
           
-          const { user, token } = response.data;
+          const { user, token } = response.data.data || response.data;
           
           set({
             user,
@@ -115,6 +120,9 @@ export const useAuthStore = create<AuthState>()(
         token: state.token, 
         isAuthenticated: state.isAuthenticated 
       }),
+      onRehydrateStorage: () => (state) => {
+        console.log('Auth store rehydrated:', state);
+      },
     }
   )
 );

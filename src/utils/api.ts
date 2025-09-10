@@ -14,9 +14,20 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().token;
+    const authState = useAuthStore.getState();
+    const token = authState.token;
+    console.log('API Request - Auth State:', { 
+      hasToken: !!token, 
+      isAuthenticated: authState.isAuthenticated,
+      hasUser: !!authState.user,
+      url: config.url 
+    });
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('API Request - Authorization header set for:', config.url);
+    } else {
+      console.log('API Request - No token available for:', config.url);
     }
     return config;
   },

@@ -18,9 +18,28 @@ import Badge from '../components/ui/Badge';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const Dashboard: React.FC = () => {
-  const { user, isAdmin, isFaculty, isStudent } = useAuth();
+  const { user, token, isAuthenticated, isAdmin, isFaculty, isStudent } = useAuth();
 
   const { data: stats, isLoading, error } = useDashboardStats(user?.role || 'STUDENT');
+
+  // Debug function to test API calls
+  const testApiCall = async () => {
+    try {
+      console.log('Testing API call...');
+      const response = await fetch('http://localhost:3000/api/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await response.json();
+      console.log('API Response:', data);
+      alert(`API Test: ${response.status} - ${JSON.stringify(data)}`);
+    } catch (error) {
+      console.error('API Test Error:', error);
+      alert(`API Test Error: ${error}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -78,6 +97,23 @@ const Dashboard: React.FC = () => {
         <p className="text-gray-600 dark:text-gray-400 mt-2">
           Welcome back to your {user?.role.toLowerCase()} dashboard
         </p>
+      </div>
+
+      {/* Debug Section - Remove this in production */}
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">Debug Info</h3>
+        <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+          <p>Authenticated: {isAuthenticated ? 'Yes' : 'No'}</p>
+          <p>Token: {token ? 'Present' : 'Missing'}</p>
+          <p>User: {user ? `${user.firstName} ${user.lastName}` : 'None'}</p>
+          <p>Role: {user?.role || 'None'}</p>
+        </div>
+        <button
+          onClick={testApiCall}
+          className="mt-2 px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
+        >
+          Test API Call
+        </button>
       </div>
 
       {/* Stats Grid */}

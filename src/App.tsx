@@ -14,6 +14,8 @@ import QRScannerPage from './pages/QRScannerPage';
 import CoursesPage from './pages/CoursesPage';
 import SessionsPage from './pages/SessionsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import UsersPage from './pages/UsersPage';
+import DepartmentsPage from './pages/DepartmentsPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -74,9 +76,23 @@ function AppRoutes() {
           } 
         />
         
-        {/* Placeholder routes - will be implemented in the next phase */}
-        <Route path="/departments" element={<div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900 dark:text-white">Departments - Coming Soon</h2></div>} />
-        <Route path="/users" element={<div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900 dark:text-white">Users - Coming Soon</h2></div>} />
+        {/* Admin Routes */}
+        <Route 
+          path="/departments" 
+          element={
+            <ProtectedRoute requiredRoles={['ADMIN']}>
+              <DepartmentsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/users" 
+          element={
+            <ProtectedRoute requiredRoles={['ADMIN']}>
+              <UsersPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="/timetable" element={<div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900 dark:text-white">Timetable - Coming Soon</h2></div>} />
         <Route path="/attendance" element={<div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900 dark:text-white">Attendance - Coming Soon</h2></div>} />
         <Route path="/profile" element={<div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900 dark:text-white">Profile - Coming Soon</h2></div>} />

@@ -14,11 +14,27 @@ export const departmentKeys = {
 
 // Get all departments
 export const useDepartments = () => {
-  return useQuery({
+  const query = useQuery({
     queryKey: departmentKeys.lists(),
     queryFn: departmentService.getDepartments,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
+
+  const createDepartmentMutation = useCreateDepartment();
+  const updateDepartmentMutation = useUpdateDepartment();
+  const deleteDepartmentMutation = useDeleteDepartment();
+
+  return {
+    departments: query.data || [],
+    isLoading: query.isLoading,
+    error: query.error,
+    createDepartment: createDepartmentMutation.mutateAsync,
+    updateDepartment: updateDepartmentMutation.mutateAsync,
+    deleteDepartment: deleteDepartmentMutation.mutateAsync,
+    isCreating: createDepartmentMutation.isPending,
+    isUpdating: updateDepartmentMutation.isPending,
+    isDeleting: deleteDepartmentMutation.isPending,
+  };
 };
 
 // Get single department

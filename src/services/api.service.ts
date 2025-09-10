@@ -134,6 +134,11 @@ export const userService = {
     return response.data.data || response.data;
   },
 
+  createUser: async (userData: RegisterData): Promise<User> => {
+    const response = await api.post(API_ENDPOINTS.AUTH.REGISTER, userData);
+    return response.data.user || response.data;
+  },
+
   updateUser: async (id: string, userData: Partial<User>): Promise<User> => {
     const response = await api.put(API_ENDPOINTS.USERS.UPDATE(id), userData);
     return response.data.data || response.data;
